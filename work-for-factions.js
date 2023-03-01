@@ -7,6 +7,7 @@ let options;
 const argsSchema = [
     ['first', []], // Grind rep with these factions first. Also forces a join of this faction if we normally wouldn't (e.g. no desired augs or all augs owned)
     ['skip', []], // Don't work for these factions
+    ['disable', false], // disable the work-for-factions script entirely
     ['o', false], // Immediately grind company factions for rep after getting their invite, rather than first getting all company invites we can
     ['desired-stats', []], // Factions will be removed from our 'early-faction-order' once all augs with these stats have been bought out
     ['no-focus', false], // Disable doing work that requires focusing (crime), and forces study/faction/company work to be non-focused (even if it means incurring a penalty)
@@ -121,6 +122,12 @@ export async function main(ns) {
     if (firstFactions.length > 0) ns.print(`--first factions: ${firstFactions.join(", ")}`);
     if (options.skip.length > 0) ns.print(`--skip factions: ${options.skip.join(", ")}`);
     if (options['fast-crimes-only']) ns.print(`--fast-crimes-only`);
+    
+    // infinite loop to disable script, this prevents other scripts from spamming the startup message
+    while (options['disable']) {
+        ns.print('--disable set. This must be turned off in config file. Paused.')
+        await ns.sleep(10000);
+    }
 
     // Find out whether the user can use this script
     dictSourceFiles = await getActiveSourceFiles(ns); // Find out what source files the user has unlocked

@@ -41,6 +41,7 @@ const argsSchema = [
     ['queue-delay', 1000], // Delay before the first script begins, to give time for all scripts to be scheduled
     ['max-batches', 40], // Maximum overlapping cycles to schedule in advance. Note that once scheduled, we must wait for all batches to complete before we can schedule more
     ['i', false], // Farm intelligence with manual hack.
+    ['ram-budget-percent', 0.5], // how much cash we are willing to spend on ram upgrades
     ['reserved-ram', 32], // Keep this much home RAM free when scheduling hack/grow/weaken cycles on home.
     ['looping-mode', false], // Set to true to attempt to schedule perpetually-looping tasks.
     ['recovery-thread-padding', 1], // Multiply the number of grow/weaken threads needed by this amount to automatically recover more quickly from misfires.
@@ -306,7 +307,7 @@ export async function main(ns) {
         // Buy upgrades regardless of payoff if they cost less than 0.1% of our money
         { interval: 29000, name: "hacknet-upgrade-manager.js", shouldRun: shouldUpgradeHacknet, args: () => ["-c", "--max-payoff-time", "1E100h", "--max-spend", ns.getServerMoneyAvailable("home") * 0.001] },
         {
-            interval: 30000, name: "/Tasks/ram-manager.js", args: () => ['--budget', 0.5, '--reserve', reservedMoney(ns)], // Spend about 50% of un-reserved cash on home RAM upgrades (permanent) when they become available
+            interval: 30000, name: "/Tasks/ram-manager.js", args: () => ['--budget', options['ram-budget-percent'], '--reserve', reservedMoney(ns)], // Spend about 50% of un-reserved cash on home RAM upgrades (permanent) when they become available
             shouldRun: () => 4 in dictSourceFiles && shouldImproveHacking() // Only trigger if hack income is important
         },
         {   // Periodically check for new faction invites and join if deemed useful to be in that faction. Also determines how many augs we could afford if we installed right now

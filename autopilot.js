@@ -28,6 +28,7 @@ const argsSchema = [ // The set of all command line arguments
 	['disable-wait-for-4s', false], // If true, will doesn't wait for the 4S Tix API to be acquired under any circumstantes
 	['disable-rush-gangs', false], // Set to true to disable focusing work-for-faction on Karma until gangs are unlocked
 	['disable-casino', false], // Set to true to disable running the casino.js script automatically
+ 	['hacknet-cash-only', false], // Set to true to disable spending hashes on hacking
 	['on-completion-script', null], // Spawn this script when we defeat the bitnode
 	['on-completion-script-args', []], // Optional args to pass to the script when we defeat the bitnode
 ];
@@ -65,7 +66,7 @@ export async function main(ns) {
 
 	log(ns, "INFO: Auto-pilot engaged...", true, 'info');
 	// The game does not allow boolean flags to be turned "off" via command line, only on. Since this gets saved, notify the user about how they can turn it off.
-	const flagsSet = ['disable-auto-destroy-bn', 'disable-bladeburner', 'disable-wait-for-4s', 'disable-rush-gangs'].filter(f => options[f]);
+	const flagsSet = ['disable-auto-destroy-bn', 'disable-bladeburner', 'hacknet-cash-only', 'disable-wait-for-4s', 'disable-rush-gangs'].filter(f => options[f]);
 	for (const flag of flagsSet)
 		log(ns, `WARNING: You have previously enabled the flag "--${flag}". Because of the way this script saves its run settings, the ` +
 			`only way to now turn this back off will be to manually edit or delete the file ${ns.getScriptName()}.config.txt`, true);
@@ -336,8 +337,9 @@ async function checkOnRunningScripts(ns, player) {
 	}
 
 	// Spend hacknet hashes on our boosting best hack-income server once established
-	const spendingHashesOnHacking = findScript('spend-hacknet-hashes.js', s => s.args.includes("--spend-on-server"))
-	if ((9 in unlockedSFs) && !spendingHashesOnHacking && player.playtimeSinceLastAug >= options['time-before-boosting-best-hack-server'] && !(player.bitNodeN == 8)) {
+	const spendingHashesOnHacking = findScript('spend-hacknet-hashes.js', s => s.args.includes("--spend-on-server"));
+	const spendingHashes = findScript('spend-hacknet-hashes.js');
+	if (!options['hacknet-cash-only'] && (9 in unlockedSFs) && !spendingHashesOnHacking && player.playtimeSinceLastAug >= options['time-before-boosting-best-hack-server'] && !(player.bitNodeN == 8)) {
 		const strServerIncomeInfo = ns.read('/Temp/analyze-hack.txt');	// HACK: Steal this file that Daemon also relies on
 		if (strServerIncomeInfo) {
 			const incomeByServer = JSON.parse(strServerIncomeInfo);
@@ -349,6 +351,10 @@ async function checkOnRunningScripts(ns, player) {
 			launchScriptHelper(ns, 'spend-hacknet-hashes.js',
 				["--liquidate", "--spend-on", "Increase_Maximum_Money", "--spend-on", "Reduce_Minimum_Security", "--spend-on-server", bestServer]);
 		}
+	}
+	else if (options['hacknet-cash-only'] && !spendingHashes) {
+		log(ns, "Liquidating hacknet hashes");
+		launchScriptHelper(ns, 'spend-hacknet-hashes.js', ["--liquidate"]);
 	}
 
 	// Determine the arguments we want to run daemon.js with. We will either pass these directly, or through stanek.js if we're running it first.	
