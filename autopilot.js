@@ -24,6 +24,7 @@ const argsSchema = [ // The set of all command line arguments
 	['high-hack-threshold', 8000], // Once hack level reaches this, we start daemon in high-performance hacking mode
 	['enable-bladeburner', null], // (Deprecated) Bladeburner is now always enabled if it's available. Use '--disable-bladeburner' to explicitly turn off
 	['disable-bladeburner', false], // This will instruct daemon.js not to run the bladeburner.js, even if bladeburner is available.
+	['run-corporation', false], // If set, we will run the corp script
 	['wait-for-4s-threshold', 0.9], // Set to 0 to not reset until we have 4S. If money is above this ratio of the 4S Tix API cost, don't reset until we buy it.
 	['disable-wait-for-4s', false], // If true, will doesn't wait for the 4S Tix API to be acquired under any circumstantes
 	['disable-rush-gangs', false], // Set to true to disable focusing work-for-faction on Karma until gangs are unlocked
@@ -359,7 +360,7 @@ async function checkOnRunningScripts(ns, player) {
 
 	// Determine the arguments we want to run daemon.js with. We will either pass these directly, or through stanek.js if we're running it first.	
 	const hackThreshold = options['high-hack-threshold']; // If player.skills.hacking level is about 8000, run in "start-tight" mode
-	const daemonArgs = (player.skills.hacking < hackThreshold || player.bitNodeN == 8) ? [] :
+	var daemonArgs = (player.skills.hacking < hackThreshold || player.bitNodeN == 8) ? [] :
 		// Launch daemon in "looping" mode if we have sufficient hack level
 		["--looping-mode", "--cycle-timing-delay", 2000, "--queue-delay", "10", "--initial-max-targets", "63",
 			"--stock-manipulation-focus", "--silent-misfires", "--no-share",
@@ -368,6 +369,8 @@ async function checkOnRunningScripts(ns, player) {
 	daemonArgs.push('--disable-script', getFilePath('work-for-factions.js')); // We will run this ourselves with args of our choosing
 	// Hacking earns no money in BN8, so prioritize XP
 	if (player.bitNodeN == 8) daemonArgs.push("--xp-only");
+	// Run corp in BN3 by default
+	if (player.bitNodeN == 3 || options['run-corporation']) daemonArgs.push("--run-corporation");
 	// Don't run the script to join and manage bladeburner if it is explicitly disabled
 	if (options['disable-bladeburner']) daemonArgs.push('--disable-script', getFilePath('bladeburner.js'));
 	// If we have SF4, but not level 3, instruct daemon.js to reserve additional home RAM

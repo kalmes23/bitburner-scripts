@@ -12,6 +12,7 @@ const argsSchema = [
     ['desired-stats', []], // Factions will be removed from our 'early-faction-order' once all augs with these stats have been bought out
     ['no-focus', false], // Disable doing work that requires focusing (crime), and forces study/faction/company work to be non-focused (even if it means incurring a penalty)
     ['no-studying', false], // Disable studying.
+    ['no-tail', false], // Disable forcing window to the front 
     ['pay-for-studies-threshold', 200000], // Only be willing to pay for our studies if we have this much money
     ['training-stat-per-multi-threshold', 100], // Heuristic: Estimate that we can train this many levels for every mult / exp_mult we have in a reasonable amount of time.
     ['no-coding-contracts', false], // Disable purchasing coding contracts for reputation
@@ -579,11 +580,11 @@ export async function crimeForKillsKarmaStats(ns, reqKills, reqKarma, reqStats, 
         if (!lastCrime || !(crimeType && crimeType.toLowerCase().includes(lastCrime))) {
             if (lastCrime) {
                 log(ns, `Committing Crime "${lastCrime}" Interrupted. (Now: ${crimeType}) Restarting...`, false, 'warning');
-                ns.tail(); // Force a tail window open to help the user kill this script if they accidentally closed the tail window and don't want to keep doing crime
+                if (!options['no-tail']) ns.tail(); // Force a tail window open to help the user kill this script if they accidentally closed the tail window and don't want to keep doing crime
             }
             let focusArg = shouldFocus === undefined ? true : shouldFocus; // Only undefined if running as imported function
             crimeTime = await getNsDataThroughFile(ns, 'ns.singularity.commitCrime(ns.args[0], ns.args[1])', '/Temp/commitCrime.txt', [crime, focusArg])
-            if (shouldFocus) ns.tail(); // Force a tail window open when auto-criming with focus so that the user can more easily kill this script
+            if (shouldFocus && !options['no-tail']) ns.tail(); // Force a tail window open when auto-criming with focus so that the user can more easily kill this script
         }
         // Periodic status update with progress
         if (lastCrime != crime || (Date.now() - lastStatusUpdateTime) > statusUpdateInterval) {
@@ -818,7 +819,7 @@ export async function workForSingleFaction(ns, factionName, forceUnlockDonations
         if (workAssigned && currentWork.factionName != factionName) {
             log(ns, `Work for faction ${factionName} was interrupted (Now: ${JSON.stringify(currentWork)}). Restarting...`, false, 'warning');
             workAssigned = false;
-            ns.tail(); // Force a tail window open to help the user kill this script if they accidentally closed the tail window and don't want to keep working
+            if (!options['no-tail']) ns.tail(); // Force a tail window open to help the user kill this script if they accidentally closed the tail window and don't want to keep working
         }
         // Periodically check again what the best faction work is (may change with stats over time)
         if ((Date.now() - lastStatusUpdateTime) > statusUpdateInterval)
@@ -835,7 +836,7 @@ export async function workForSingleFaction(ns, factionName, forceUnlockDonations
         if (!workAssigned) {
             if (await startWorkForFaction(ns, factionName, bestFactionJob, shouldFocus)) {
                 workAssigned = true;
-                if (shouldFocus) ns.tail(); // Keep a tail window open if we're stealing focus
+                if (shouldFocus && !options['no-tail']) ns.tail(); // Keep a tail window open if we're stealing focus
             } else {
                 log(ns, `ERROR: Something went wrong, failed to start "${bestFactionJob}" work for faction "${factionName}" (Is gang faction, or not joined?)`, false, 'error');
                 break;
@@ -1058,7 +1059,7 @@ export async function workForMegacorpFactionInvite(ns, factionName, waitForInvit
             if (isStudying && !(classType && classType.toLowerCase().includes('leadership'))) {
                 log(ns, `Leadership studies were interrupted. classType="${classType}" Restarting...`, false, 'warning');
                 isStudying = false; // If something external has interrupted our studies, take note
-                ns.tail(); // Force a tail window open to help the user kill this script if they accidentally closed the tail window and don't want to keep studying
+                if (!options['no-tail']) ns.tail(); // Force a tail window open to help the user kill this script if they accidentally closed the tail window and don't want to keep studying
             }
             if (!isStudying) { // Study at ZB university if CHA is the limiter.
                 if (await studyForCharisma(ns, shouldFocus))
@@ -1088,13 +1089,13 @@ export async function workForMegacorpFactionInvite(ns, factionName, waitForInvit
             if (isWorking) { // Log a warning if we discovered that work we previously began was disrupted
                 log(ns, `Work for company ${companyName} was interrupted (Now: ${JSON.stringify(currentWork)}). Restarting...`, false, 'warning');
                 isWorking = false;
-                ns.tail(); // Force a tail window open to help the user kill this script if they accidentally closed the tail window and don't want to keep working
+                if (!options['no-tail']) ns.tail(); // Force a tail window open to help the user kill this script if they accidentally closed the tail window and don't want to keep working
             }
             // TODO: BITBURNER BUG: Game currently inverting this argument. Fix as soon as the game is updated. 
             let focusArg = shouldFocus ? false : true; // TODO: REMOVE ON BUG FIX
             if (await getNsDataThroughFile(ns, `ns.singularity.workForCompany(ns.args[0], ns.args[1])`, '/Temp/workForCompany.txt', [companyName, focusArg])) {
                 isWorking = true;
-                if (shouldFocus) ns.tail(); // Keep a tail window open if we're stealing focus
+                if (shouldFocus && !options['no-tail']) ns.tail(); // Keep a tail window open if we're stealing focus
             } else {
                 log(ns, `Something went wrong, failed to start working for company "${companyName}".`, false, 'error');
                 break;

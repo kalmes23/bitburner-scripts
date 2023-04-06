@@ -49,6 +49,7 @@ const argsSchema = [
     ['no-share', false], // Disable sharing free ram to increase faction rep gain
     ['share-cooldown', 5000], // Wait before attempting to schedule more share threads (e.g. to free RAM to be freed for hack batch scheduling first)
     ['share-max-utilization', 0.8], // Set to 1 if you don't care to leave any RAM free after sharing. Will use up to this much of the available RAM
+ 	  ['run-corporation', false], // If set, we will run the corp script
     ['no-tail-windows', false], // Set to true to prevent the default behaviour of opening a tail window for certain launched scripts. (Doesn't affect scripts that open their own tail windows)
     ['initial-study-time', 10], // Seconds. Set to 0 to not do any studying at startup. By default, if early in an augmentation, will start with a little study to boost hack XP
     ['initial-hack-xp-time', 10], // Seconds. Set to 0 to not do any hack-xp grinding at startup. By default, if early in an augmentation, will start with a little study to boost hack XP
@@ -284,6 +285,10 @@ export async function main(ns) {
         {   // Script to manage bladeburner for us. Run automatically if not disabled and bladeburner API is available
             name: "bladeburner.js", tail: openTailWindows,
             shouldRun: () => !options['disable-script'].includes('bladeburner.js') && 7 in dictSourceFiles && playerBitnode != 8
+        },
+        {   // Script to run the player corporation
+            name: "corporation.js",
+            shouldRun: () => options['run-corporation'] && reqRam(4000)
         },
     ];
     asynchronousHelpers.forEach(helper => helper.name = getFilePath(helper.name));
