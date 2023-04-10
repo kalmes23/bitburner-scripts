@@ -1,3 +1,14 @@
+# Fork from Alain Bryden
+
+kalmes23/bitburner-scripts is a fork of https://github.com/alainbryden/bitburner-scripts
+
+The remainder of this readme is from the original repo.
+Significant changes: 
+* addition of a corporation script. This takes $150 and a lot of memory to run, but will produce infinite cash in about 8 hours
+* addition of several different command options that make it easier to tweak operation in a few different ways. You still must browse the header of the main .js files to read parameters, and usually it's suggested you use command.js.config.txt files to set those params (this is the existing system). I have some thoughts of changing to a structured 'strategy' system that would adjust parameters and restart appropriate scripts as needed.
+
+
+
 # Downloading the whole repository
 
 If you manually `nano git-pull.js` from the terminal and copy the [contents of that script](https://raw.githubusercontent.com/alainbryden/bitburner-scripts/main/git-pull.js), you should be able to run it once and download the rest of the files I use. Early-game, many will be useless because they are only enabled by late-game features, but they shouldn't give you too many problems just being there.
