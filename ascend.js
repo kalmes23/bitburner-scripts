@@ -89,8 +89,7 @@ export async function main(ns) {
             const haveStanek = await getNsDataThroughFile(ns, `ns.stanek.acceptGift()`, '/Temp/stanek-acceptGift.txt');
             if (haveStanek) log(ns, 'INFO: Confirmed that we have Stanek\'s Gift', true, 'info');
             else {
-                log(ns, 'WARNING: It looks like we can\'t get Stanek\'s Gift. (Did you manually purchase some augmentations?)', true, 'warning');
-                options['skip-staneks-gift'] = true; // Nothing we can do, no point in failing our augmentation install
+                return log(ns, `ERROR: Could not accept Stanek\'s Gift. (Set --skip-staneks-gift to ignore)`, true, 'warning');
             }
         }
 

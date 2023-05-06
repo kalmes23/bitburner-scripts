@@ -421,6 +421,15 @@ export async function instanceCount(ns, onHost = "home", warn = true, tailOtherI
     return others.length;
 }
 
+/** @param {NS} ns 
+ * Kills all scripts using the given script name on the host. **/
+export async function killScript(ns, scriptName, onHost = "home") {
+    const others = await getNsDataThroughFile(ns, 'ns.ps(ns.args[0]).filter(p => p.filename == ns.args[1]).map(p => p.pid)',
+        '/Temp/ps-other-instances.txt', [onHost, scriptName]);
+    log(ns, "killing pids: " + JSON.stringify(others), true);
+    others.forEach(pid => ns.kill(pid));    
+}
+
 let cachedStockSymbols = null; // Cache of stock symbols since these never change
 
 /** Helper function to get all stock symbols, or null if you do not have TIX api access.

@@ -17,6 +17,7 @@ const argsSchema = [
 	['Heal-reserve', 10e9], // allow Tob and Heal to compete for money
 	['Food-reserve', 10e9], // same
 	['Extra-reserve', 50e9], // excess upgrades
+	['Pri-reserve', 500e6], // priority upgrades
 	['warehouse-limit', 0.70], // how much of the warehouse we are willing to fill
 		// this should be pretty conservative to allow enough product
 	['additional-industries', false], // can go ahead and start Healthcare and Food if you want max cash
@@ -208,13 +209,13 @@ function expandOfficeSize(ns, divName, cityName, targetCount) {
 	var office = ns.corporation.getOffice(divName, cityName);
 	if (office.size < targetCount) {
 		if (canAfford(ns, divName, ns.corporation.getOfficeSizeUpgradeCost(divName, cityName, targetCount-office.size))) {
-			log(ns, "Upgrading office: " + divName + " " + cityName + " to " + targetCount);
+			log(ns, "Upgrading office: " + divName + " " + cityName + " to " + Number(targetCount));
 			ns.corporation.upgradeOfficeSize(divName, cityName, targetCount - office.size);
 		}
 		// if we end up with too big a bite, see if we can do 15 instead
 		// (this logic relies on 15 being *less expensive* than above)
 		else if (canAfford(ns, divName, ns.corporation.getOfficeSizeUpgradeCost(divName, cityName, 15))) {
-			log(ns, "Upgrading office incrementally: " + divName + " " + cityName + " to " + office.size+15);
+			log(ns, "Upgrading office incrementally: " + divName + " " + cityName + " to " + (Number(office.size)+15));
 			ns.corporation.upgradeOfficeSize(divName, cityName, 15);
 		}
 		else {
@@ -397,18 +398,19 @@ function setProdSalePrices(ns, divName) {
 			// start with the best other price + 10%, or 4 at a minimum
 			mult = Math.max(4, Math.floor(otherProdMult(ns, divName)*1.10));
 		}
-		else if (prodWarehousesEmpty(ns, divName, productName)) {
-			if (prevMult > 100)
-				mult = Math.floor(prevMult * 1.05);
-			else
-				mult = prevMult + 2;
-		}
 		else if (prevMult > 1 && prodWarehousesFull(ns, divName, productName)) {
 			if (prevMult > 100)
 				mult = Math.floor(prevMult * 0.99);
 			else
 				mult = prevMult - 1;
 		}
+		else if (prodWarehousesEmpty(ns, divName, productName)) {
+			if (prevMult > 100)
+				mult = Math.floor(prevMult * 1.05);
+			else
+				mult = prevMult + 2;
+		}
+
 		else
 			mult = prevMult;
 
@@ -594,10 +596,15 @@ function tryInstallResearch(ns, divName, researchName, requirePoints = 0) {
 	return false;
 }
 
+function addAdVert(ns, divName) {
+	log(ns, "Adding " + divName + " Ad.Vert");
+	ns.corporation.hireAdVert(divName);
+}
+
 function doDivisionUpgrades(ns, divName) {
 	// abandoning the 'unlimited advert' strategy.. doesn't seem to work well
 
-	if (divName == "Ag") {
+	if (!isProductDivision(ns, divName)) {
 		let advertLimit = 1.25e9; // 4 levels
 		if (gStrategyPhase == 2) 
 			advertLimit = 1.7e9; // 6 levels
@@ -606,8 +613,7 @@ function doDivisionUpgrades(ns, divName) {
 	
 		if (ns.corporation.getHireAdVertCost(divName) <= advertLimit &&
 			canAfford(ns, divName, ns.corporation.getHireAdVertCost(divName))) {
-			log(ns, "Adding level of Ad.Vert");
-			ns.corporation.hireAdVert(divName);
+			addAdVert(ns, divName);
 		}
 	}
 
@@ -617,17 +623,19 @@ function doDivisionUpgrades(ns, divName) {
 	if (isProductDivision(ns, divName)) {
 		var cost = ns.corporation.getHireAdVertCost(divName);
 		if (cost > 1e12 && canAfford(ns, divName, cost))
-			ns.corporation.hireAdVert(divName);
+			addAdVert(ns, divName);
 		else if (cost > 5e11 && canAfford(ns, divName, 3*cost))
-			ns.corporation.hireAdVert(divName);
+			addAdVert(ns, divName);
 		else if (canAfford(ns, divName, 10*cost))
-			ns.corporation.hireAdVert(divName);
+			addAdVert(ns, divName);
 	}
 	
 	// now check on division research
 	if (isProductDivision(ns, divName)) {
 		// require install in order
-		var res = tryInstallResearch(ns, divName, "Hi-Tech R&D Laboratory", 15e3) &&
+		var res = tryInstallResearch(ns, divName, "Hi-Tech R&D Laboratory", 30e3) &&
+				// Hi-Tech got tuned way back. The delay for introducing it for any of the first
+				// ten products just seems too much.
 			tryInstallResearch(ns, divName, "Market-TA.I", 140e3) &&
 			tryInstallResearch(ns, divName, "Market-TA.II");
 	}
@@ -656,9 +664,10 @@ function doUpgrades(ns) {
 		tryUpgradeToLevel(ns, "Speech Processor Implants", 2);
 		tryUpgradeToLevel(ns, "Nuoptimal Nootropic Injector Implants", 2);
 		tryUpgradeToLevel(ns, "Smart Factories", 2);
+		tryUpgradeToLevel(ns, "Smart Storage", 2);
 	} else if (gStrategyPhase == 2) {
-		tryUpgradeToLevel(ns, "Smart Factories", 10);
-		tryUpgradeToLevel(ns, "Smart Storage", 10);
+		tryUpgradeToLevel(ns, "Smart Factories", 10, "Pri");
+		tryUpgradeToLevel(ns, "Smart Storage", 10, "Pri");
 	} else if (gStrategyPhase == 3) {
 		tryUpgradeToLevel(ns, "Wilson Analytics", 20, "Tob");
 

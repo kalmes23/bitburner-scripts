@@ -7,7 +7,31 @@ import {
 const persistentLog = "log.autopilot.txt";
 const factionManagerOutputFile = "/Temp/affordable-augs.txt"; // Temp file produced by faction manager with status information
 const casinoFlagFile = "/Temp/ran-casino.txt";
-const defaultBnOrder = [4.3, 1.3, 5.1, 9.2, 10.1, 2.1, 8.2, 10.3, 9.3, 11.3, 13.3, 5.3, 7.1, 6.3, 7.3, 2.3, 8.3, 3.3, 12.999];
+//const defaultBnOrder = [4.3, 1.3, 5.1, 9.2, 10.1, 2.1, 8.2, 10.3, 9.3, 11.3, 13.3, 5.3, 7.1, 6.3, 7.3, 2.3, 8.3, 3.3, 12.999];
+
+// MAK - modified for fast start, with corps
+const defaultBnOrder = [
+  4.2, // try to get by with singularity.2 for a while
+  3.3, // corp has infinite money, need 3 for API
+  2.1, // need gangs to take advantage of corp
+  10.1, // unlock most of our sleeves
+  8.2, // unlock short-selling, faster node starts
+  5.1, // unlock INT
+  1.2, // base mult -> 24%
+  9.1, // unlock hacknet
+  11.1, // faster rep gain
+  1.3, // base mult -> 28%
+  11.3, // rep gains
+  10.3, // rest of sleeves
+  13.3, // stanek
+  5.3, // hack -> 14%
+  2.3, // charisma -> 42%
+  4.3, // singularity runs better
+  9.3, // hacknet -> 14%
+  7.1, 6.3, 7.3, // bladeburner
+  8.3, // hacking growth -> 21%
+  12.999];
+
 
 let options; // The options used at construction time
 const argsSchema = [ // The set of all command line arguments

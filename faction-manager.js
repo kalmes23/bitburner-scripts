@@ -145,10 +145,17 @@ export async function main(ns) {
     // Clear "priority" / "desired" lists of any augs we already own
     priorityAugs = priorityAugs.filter(name => !simulatedOwnedAugmentations.includes(name));
     desiredAugs = desiredAugs.filter(name => !simulatedOwnedAugmentations.includes(name));
+
+    // determine NF level already owned
+    let nfPrice = await getNsDataThroughFile(ns, `ns.singularity.getAugmentationPrice("${strNF}")`, '/Temp/nf-price.txt');
+    let nfLevel = Math.round(Math.log(nfPrice / (augCountMult ** augsAwaitingInstall) / 750000) / Math.log(1.14));
+    //log(ns, 'nfPrice: ' + JSON.stringify(nfPrice) + " nfLevel: " + JSON.stringify(nfLevel), printToTerminal);
+
     // Determine the set of desired augmentation stats. If not specified by the user, it's based on our situation
     desiredStatsFilters = options['stat-desired'];
     if ((desiredStatsFilters?.length ?? 0) == 0) // If the user does has not specified stats or augmentations to prioritize, use sane defaults
-        desiredStatsFilters = ownedAugmentations.length > 40 ? ['*'] : // Once we have more than N augs, switch to buying up anything and everything
+        // MAK - modified to include nfLevel, because once you have enough nfLevels, this calculation stops making a lot of sense
+        desiredStatsFilters = ownedAugmentations.length + nfLevel > 40 ? ['*'] : // Once we have more than N augs, switch to buying up anything and everything
             playerData.bitNodeN == 6 || playerData.bitNodeN == 7 || playerData.factions.includes("Bladeburners") ? ['*'] : // If doing bladeburners, combat augs matter too, so just get everything
                 ['hacking', 'faction_rep', 'company_rep', 'charisma', 'hacknet', 'crime_money']; // Otherwise get hacking + rep boosting, etc. for unlocking augs more quickly
     log(ns, 'Desired stats filter: ' + JSON.stringify(desiredStatsFilters));
@@ -314,6 +321,7 @@ async function updateAugmentationData(ns, desiredAugs) {
                 this.joinedFactionsWithAug()[0])?.name;
         },
         toString: function () {
+            let favorToRep = (favor) => Math.ceil(25500 * 1.02 ** (favor - 1) - 25000);
             const factionColWidth = 16, augColWidth = 40, statsColWidth = 60;
             const statKeys = Object.keys(this.stats);
             const statsString = `Stats:${statKeys.length.toFixed(0).padStart(2)}` + (statKeys.length == 0 ? '' :
@@ -321,10 +329,13 @@ async function updateAugmentationData(ns, desiredAugs) {
             const factionName = this.getFromJoined() || this.getFromAny;
             const fCreep = Math.max(0, factionName.length - factionColWidth);
             const budget = playerData.money + stockValue;
+            const donateRepRequired = Math.max(0, favorToRep(favorToDonate) - favorToRep(factionData[factionName].favor));
+            const dRepString = donateRepRequired < this.reputation? `DRep: ${formatNumberShort(donateRepRequired, 4)}  ` : '              ';
             const augNameShort = this.displayName.length <= (augColWidth - fCreep) ? this.displayName :
                 `${this.displayName.slice(0, Math.ceil(augColWidth / 2 - 3 - fCreep))}...${this.displayName.slice(this.displayName.length - Math.floor(augColWidth / 2))}`;
             return `${this.desired ? '*' : ' '} Price: ${formatMoney(this.price, 4).padEnd(7)} ${this.price <= budget ? '✓' : '✗'}  ` +
                 `Rep: ${formatNumberShort(this.reputation, 4).padEnd(6)} ${this.canAfford() ? '✓' : this.canAffordWithDonation() ? '$' : '✗'}  ` +
+                dRepString +
                 `Faction: ${factionName.padEnd(factionColWidth)}  Aug: ${augNameShort.padEnd(augColWidth - fCreep)}  ` +
                 `${statsString.length <= statsColWidth ? statsString : (statsString.substring(0, statsColWidth - 4) + '... }')}`;
         }
