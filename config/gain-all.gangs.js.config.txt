@@ -1,0 +1,1 @@
+[["training-percentage", 0.5],["reputation-focus", true]]

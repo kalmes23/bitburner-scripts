@@ -1,0 +1,1 @@
+[["max-spend", 0],["toast", true]]
