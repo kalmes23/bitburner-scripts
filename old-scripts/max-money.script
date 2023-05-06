@@ -1,0 +1,11 @@
+function format(num) {
+	options = {
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 2
+	};
+	formatted = Number(num).toLocaleString('en', options);
+	return formatted;
+}
+
+tprint(args[0] + " money: " + format(getServerMoneyAvailable(args[0])/1000000) 
+  + "M / " + format(getServerMaxMoney(args[0])/1000000) + "M");

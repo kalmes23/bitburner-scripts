@@ -1,0 +1,47 @@
+function format(num) {
+	options = {
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 2
+	};
+	formatted = Number(num).toLocaleString('en', options);
+	return formatted;
+}
+
+var ramarg = args[0];
+var ram = ramarg;
+var id = args[1];
+
+if (id === undefined)
+  id = 0;
+var pserv = "pserv-" + id;
+
+if (ramarg == "max" || ramarg == "auto")
+  ram = 1048576;  // max RAM
+
+if (0) {
+	var mults = getBitNodeMultipliers();
+	tprint("PurchasedServerCost: " + mults.PurchasedServerCost);
+	tprint("PurchasedServerSoftCap: " + mults.PurchasedServerSoftCap);
+	tprint("PurchasedServerLimit: " + mults.PurchasedServerLimit);
+	tprint("PurchasedServerMaxRam: " + mults.PurchasedServerMaxRam);
+	// getting back just 1.0 from these
+}
+
+// don't know why price has tripled
+//var price = ram * 0.055;
+var price = ram * 0.165;
+
+if (ramarg == "auto") {
+	var millions = getServerMoneyAvailable("home") / 1000000;
+	tprint("Auto-purchase cash: "+format(millions));
+	while (price > 10.0 && price > millions) { // don't purchase less than 10 million
+		price /= 2;
+		ram /= 2;
+	}
+	if (price < 10.0) {
+		tprint("Refusing to purchase < $10M");
+		exit(0);
+	}
+}
+tprint("Attempting to purchase " + pserv + " size:" + ram + ", for: " + format(price) + "M");
+purchaseServer(pserv, ram);

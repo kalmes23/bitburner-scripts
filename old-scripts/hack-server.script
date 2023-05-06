@@ -1,0 +1,18 @@
+var target = args[0];
+if (fileExists("BruteSSH.exe", "home")) {
+    brutessh(target);
+}
+if (fileExists("FTPCrack.exe", "home")) {
+    ftpcrack(target);
+}
+if (fileExists("RelaySMTP.exe", "home")) {
+    relaysmtp(target);
+}
+if (fileExists("HTTPWorm.exe", "home")) {
+    httpworm(target);
+}
+if (fileExists("SQLInject.exe", "home")) {
+    sqlinject(target);
+}
+nuke(target);
+//installBackdoor(target);

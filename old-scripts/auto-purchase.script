@@ -1,0 +1,19 @@
+//var ram = 8; // 440k
+//var threads = 3;
+//var i = 0;
+//var target = "joesguns"; 
+//var ram = 32; // 1.6 mil
+//var ram = 1024; // 56 mil
+var ram = 4096; // 232 mil
+var threads = 13;
+var i = 11;
+var target = "iron-gym"
+
+while (i < getPurchasedServerLimit()) {
+	if (getServerMoneyAvailable("home") > getPurchasedServerCost(ram)) {
+		var hostname = purchaseServer("pserv-" + i, ram);
+		//scp("basic-hack.script", hostname);
+		//exec("basic-hack.script", hostname, threads, "joesguns");
+		++i;
+	}
+}

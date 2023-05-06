@@ -1,0 +1,2 @@
+killall(args[0]);
+exec("basic-hack.script", args[0], args[1], args[2]);
