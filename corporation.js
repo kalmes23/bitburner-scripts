@@ -25,6 +25,7 @@ const argsSchema = [
 ];
 
 let gStrategyPhase = 1;
+let gBitNodeN = 1;
 const gStrategyNames = ["unknown", "Basic Ag (1)", "Expand Ag (2)", "Begin Tob (3)", "Expand Tob (4)", "Profit! (5)"];
 
 // trying a faster incremental strategy to see if it improves things
@@ -37,16 +38,24 @@ const gStrategyAcceptOffer = [0, 200e9, 5e12, 1e15, 1e18, 0];
 async function initialize(ns) {
 	let loggedWaiting = false;
 	const costCorporation = 150E9;
+
+	let player = await getNsDataThroughFile(ns, `ns.getPlayer()`, '/Temp/player-info.txt');
+	gBitNodeN = player.bitNodeN;
+
 	while (!ns.corporation.hasCorporation()) {
 		try {
-			let player = await getNsDataThroughFile(ns, `ns.getPlayer()`, '/Temp/player-info.txt');
-			if (player.bitNodeN == 3) {
+			player = await getNsDataThroughFile(ns, `ns.getPlayer()`, '/Temp/player-info.txt');
+			if (gBitNodeN == 3) {
 				ns.corporation.createCorporation(options["corp-name"], false);
+				log(ns, "Created corporation!", false, "success");
 			}
 			if (!ns.corporation.hasCorporation()) {
-				const reserve = Number(ns.read("reserve.txt") || 0);
-				if (costCorporation < player.money - reserve) {
+				// removing the reserve restriction. Don't think it works well for
+				// corporations
+				//const reserve = Number(ns.read("reserve.txt") || 0);
+				if (costCorporation < player.money) {
 					ns.corporation.createCorporation(options["corp-name"], true);
+					log(ns, "Created corporation!", false, "success");
 				}
 			}
 		}
@@ -730,7 +739,18 @@ function checkPhase(ns) {
 // have to adjust the acceptable offer based on the current bitnode to avoid
 // getting stuck
 function getStrategyAcceptOffer(ns) {
-	return ns.getBitNodeMultipliers().CorporationValuation * gStrategyAcceptOffer[gStrategyPhase];
+	// see if we have getBitNodeMultipliers
+	try {
+		return ns.getBitNodeMultipliers().CorporationValuation * gStrategyAcceptOffer[gStrategyPhase];
+	}
+	catch (error) {
+		// planned visit to BN10 before we get BN5, could expand this to 
+		// more hard-coded cases if needed
+		if (gBitNodeN == 10) {
+			return 0.5 * gStrategyAcceptOffer[gStrategyPhase];
+		}
+		return gStrategyAcceptOffer[gStrategyPhase];
+	}
 }
 
 var lastInvestmentOffer = 0;
@@ -744,7 +764,7 @@ function advanceStrategy(ns) {
 		if (willAccept > 0 &&
 			offer < lastInvestmentOffer && 
 			offer >= willAccept) {
-			log(ns, "Taking investment! - " + formatMoney(offer));
+			log(ns, "Taking investment! - " + formatMoney(offer), false, "success");
 			ns.corporation.acceptInvestmentOffer();
 		}
 		lastInvestmentOffer = offer;
@@ -755,7 +775,7 @@ function advanceStrategy(ns) {
 		var offer = ns.corporation.getInvestmentOffer().funds;
 		var willAccept = getStrategyAcceptOffer(ns);
 		if (offer >= willAccept) {
-			log(ns, "Going public! Offering 50m shares, 20% dividends");
+			log(ns, "Going public! Offering 50m shares, 20% dividends", false, "success");
 			ns.corporation.goPublic(50e6); // could adjust this.. seems like a middle ground
 			ns.corporation.issueDividends(0.20);
 		}

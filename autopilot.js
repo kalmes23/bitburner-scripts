@@ -9,16 +9,32 @@ const factionManagerOutputFile = "/Temp/affordable-augs.txt"; // Temp file produ
 const casinoFlagFile = "/Temp/ran-casino.txt";
 //const defaultBnOrder = [4.3, 1.3, 5.1, 9.2, 10.1, 2.1, 8.2, 10.3, 9.3, 11.3, 13.3, 5.3, 7.1, 6.3, 7.3, 2.3, 8.3, 3.3, 12.999];
 
+// future additions:
+//   1. Low-mem phase when starting node. Crime until we can casino into more memory.
+//      Possible resets and casino until we have 2TB. Better to deal with 4.2 singularity
+//   2. Script corp to purchase rep at phase 4 or 5. Look for any factions that I don't have
+//      rep in yet, and purchase everything needed for highest augment.
+//   3. move corp script into autopilot instead of daemon so it gets prioritized
+//   4. Suppress restarts until we get corp started.
+//   5. Maybe remove neuroreceptor management implant from prioritized list. This seems
+//      unnecessary.
+//   6. Could have an overall better way of setting 'global strategy' that will be 
+//      respected by scripts without restarting them. Could take some rearchitecture to
+//      do this however, and unclear whether I should just automate better instead.
+//
+// Of course, the ideal would be to go ahead and make a test framework for testing the 
+// effectiveness of various scripts. Perhaps most importantly the speed of corp development
+
 // MAK - modified for fast start, with corps
 const defaultBnOrder = [
   4.2, // try to get by with singularity.2 for a while
   3.3, // corp has infinite money, need 3 for API
   2.1, // need gangs to take advantage of corp
   10.1, // unlock most of our sleeves
-  8.2, // unlock short-selling, faster node starts
   5.1, // unlock INT
   1.2, // base mult -> 24%
-  9.1, // unlock hacknet
+  8.2, // unlock short-selling, faster node starts
+  9.1, // unlock hacknet - 9.2 is 128GB start, better than 4.3?
   11.1, // faster rep gain
   1.3, // base mult -> 28%
   11.3, // rep gains

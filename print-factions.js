@@ -17,7 +17,6 @@ export async function main(ns) {
 
     }
 
-
     if ((inputArgument > 0) && (inputArgument < 32)) {
         if (tempStatus[inputArgument - 1] == 1) {
             tempStatus[inputArgument - 1] = 0;
